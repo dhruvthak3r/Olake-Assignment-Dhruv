@@ -22,6 +22,34 @@ resource "aws_instance" "OLake" {
     encrypted = true
   }
 
+  provisioner "file" {
+    source = "./setup.sh"
+    destination = "/home/ubuntu/setup.sh"
+
+    connection {
+      type = "ssh"
+      user = "ubuntu"
+      private_key = file("olake-ssh.pem")
+      host = self.public_ip
+    }
+
+  }
+
+  provisioner "remote-exec" {
+      inline = [ 
+        "chmod +x /home/ubuntu/setup.sh",
+        "sudo /home/ubuntu/setup.sh"
+      ]
+
+      connection {
+        type        = "ssh"
+        user        = "ubuntu"
+        private_key = file("olake-ssh.pem")
+        host        = self.public_ip
+      }
+    }
+
+
   tags = {
     Name = "Olake-Assignment-Dhruv"
   }
@@ -68,3 +96,30 @@ resource "aws_security_group" "olake-security-group" {
 output "public_ip" {
   value = aws_instance.OLake.public_ip
 }
+
+provider "kubernetes" {
+  config_path = "~/.kube/config"
+}
+
+provider "helm" {
+  kubernetes = {
+    config_path = "~/.kube/config"
+  }
+  registries = [ {
+    url = "https://datazip-inc.github.io/olake-helm"
+    username = "admin"
+    password = "password"
+  } ]
+}
+
+
+resource "helm_release" "olake_release" {
+  name = "olake"
+  repository = "https://datazip-inc.github.io/olake-helm"
+  chart = "olake/olake"
+  
+  values = [file("${path.module}/values.yaml")]
+  
+}
+
+

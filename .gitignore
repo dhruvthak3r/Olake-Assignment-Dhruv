@@ -1,0 +1,9 @@
+terraform/variables.tf
+terraform/olake-ssh.pem
+
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+
+
+.terraform/
