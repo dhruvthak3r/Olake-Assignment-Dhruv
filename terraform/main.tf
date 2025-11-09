@@ -31,14 +31,15 @@ resource "aws_instance" "OLake" {
       user = "ubuntu"
       private_key = file("olake-ssh.pem")
       host = self.public_ip
+      timeout = "2m"
     }
-
   }
 
   provisioner "remote-exec" {
       inline = [ 
         "chmod +x /home/ubuntu/setup.sh",
-        "sudo /home/ubuntu/setup.sh"
+        "sudo /home/ubuntu/setup.sh",
+        "sleep 40"
       ]
 
       connection {
@@ -49,14 +50,18 @@ resource "aws_instance" "OLake" {
       }
     }
 
+  provisioner "local-exec" {
+   command = <<EOT
+   ssh -o StrictHostKeyChecking=no -i olake-ssh.pem ubuntu@${self.public_ip} "cat /home/ubuntu/minikube-portable.yaml" > "${path.module}/.kube/config"
+   EOT
+   interpreter = ["C:/Program Files/Git/bin/bash.exe", "-c"]
+  }
 
   tags = {
-    Name = "Olake-Assignment-Dhruv"
+   Name = "Olake-Assignment-Dhruv"
   }
 
 }
-
-
 
 
 resource "aws_security_group" "olake-security-group" {
@@ -98,28 +103,24 @@ output "public_ip" {
 }
 
 provider "kubernetes" {
-  config_path = "~/.kube/config"
+  config_path = "${path.module}/.kube/config"
 }
 
 provider "helm" {
   kubernetes = {
-    config_path = "~/.kube/config"
+    config_path = "${path.module}/.kube/config"
   }
-  registries = [ {
-    url = "https://datazip-inc.github.io/olake-helm"
-    username = "admin"
-    password = "password"
-  } ]
 }
 
 
 resource "helm_release" "olake_release" {
+  depends_on = [aws_instance.OLake]
   name = "olake"
   repository = "https://datazip-inc.github.io/olake-helm"
-  chart = "olake/olake"
+  chart = "olake"
   
   values = [file("${path.module}/values.yaml")]
-  
+
 }
 
 

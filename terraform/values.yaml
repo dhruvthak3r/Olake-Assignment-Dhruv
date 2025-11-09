@@ -97,9 +97,10 @@ olakeUI:
   # -- OLake UI service configuration
   # For external access, change type to NodePort or LoadBalancer  
   service:
+    type: NodePort
+    port: 8000        # internal port (can match NodePort)
+    nodePort: 8000
     # -- Service type (ClusterIP for internal, NodePort/LoadBalancer for external access)
-    type: ClusterIP
-    annotations: {}
   
   # -- OLake UI resource requirements (optional overrides)
   # Defaults: requests: memory=512Mi, cpu=500m (no limits by default)
@@ -131,7 +132,7 @@ ingress:
     kubernetes.io/ingress.class: nginx
 
   hosts:
-    - host: olake.local
+    - host: 3.110.157.114
       paths:
         - path: /
           pathType: Prefix
