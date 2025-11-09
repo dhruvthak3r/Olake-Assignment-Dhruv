@@ -102,4 +102,24 @@ output "public_ip" {
 }
 
 
+provider "kubernetes" {
+  config_path = "${path.module}/.kube/config"
+}
+
+provider "helm" {
+  kubernetes = {
+    config_path = "${path.module}/.kube/config"
+  }
+}
+
+
+resource "helm_release" "olake_release" {
+  depends_on = [aws_instance.OLake]
+  name = "olake"
+  repository = "https://datazip-inc.github.io/olake-helm"
+  chart = "olake"
+  
+  values = [file("${path.module}/values.yaml")]
+
+}
 
