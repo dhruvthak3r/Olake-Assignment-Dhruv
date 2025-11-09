@@ -50,13 +50,6 @@ resource "aws_instance" "OLake" {
       }
     }
 
-  provisioner "local-exec" {
-   command = <<EOT
-   ssh -o StrictHostKeyChecking=no -i olake-ssh.pem ubuntu@${self.public_ip} "cat /home/ubuntu/minikube-portable.yaml" > "${path.module}/.kube/config"
-   EOT
-   interpreter = ["C:/Program Files/Git/bin/bash.exe", "-c"]
-  }
-
   tags = {
    Name = "Olake-Assignment-Dhruv"
   }
@@ -82,6 +75,12 @@ resource "aws_security_group" "olake-security-group" {
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
+    ingress {
+        from_port = 80
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 
     ingress {
         from_port = 8000
@@ -102,25 +101,5 @@ output "public_ip" {
   value = aws_instance.OLake.public_ip
 }
 
-provider "kubernetes" {
-  config_path = "${path.module}/.kube/config"
-}
-
-provider "helm" {
-  kubernetes = {
-    config_path = "${path.module}/.kube/config"
-  }
-}
-
-
-resource "helm_release" "olake_release" {
-  depends_on = [aws_instance.OLake]
-  name = "olake"
-  repository = "https://datazip-inc.github.io/olake-helm"
-  chart = "olake"
-  
-  values = [file("${path.module}/values.yaml")]
-
-}
 
 
