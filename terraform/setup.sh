@@ -42,7 +42,7 @@ sudo systemctl enable nginx
 
 cat <<'NGINX_CONF' | sudo tee /etc/nginx/sites-available/olake
 server {
-    listen 80;
+    listen 8000;
     server_name _;
 
     location / {
@@ -51,7 +51,7 @@ server {
     }
 
     location /app/ {
-        proxy_pass http://localhost:8000/;
+        proxy_pass http://192.168.49.2:8000/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
